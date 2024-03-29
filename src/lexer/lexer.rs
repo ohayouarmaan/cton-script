@@ -1,3 +1,5 @@
+use core::panic;
+
 use crate::general_types::tokens;
 
 #[derive(Debug)]
@@ -25,14 +27,41 @@ impl Lexer {
     }
 
     fn advance(&mut self) -> char {
-        let ch: char = self.source.chars().nth(self.current).expect("something went wrong while advancing the lexer.");
+        let ch: char = self
+            .source
+            .chars()
+            .nth(self.current)
+            .expect("something went wrong while advancing the lexer.");
         self.current += 1;
         return ch;
     }
 
     fn add_token(&mut self, _type: tokens::TokenType) {
-        self.tokens.push(tokens::Token::new(_type, (&(self.source)[self.start..self.current]).to_owned(), self.line));
-    } 
+        self.tokens.push(tokens::Token::new(
+            _type,
+            (&(self.source)[self.start..self.current]).to_owned(),
+            self.line,
+        ));
+    }
+
+    fn _match(&mut self, expected: char) -> bool {
+        let c: char = self.advance();
+        if c == expected {
+            return true;
+        }
+        return false;
+    }
+
+    fn peek(&self) -> char {
+        if self.is_at_end() {
+            return '\0';
+        }
+        return self
+            .source
+            .chars()
+            .nth(self.current)
+            .expect("Something went wrong");
+    }
 
     fn scan(&mut self) {
         let c: char = self.advance();
@@ -47,7 +76,56 @@ impl Lexer {
             '+' => self.add_token(tokens::TokenType::PLUS),
             ';' => self.add_token(tokens::TokenType::SEMICOLON),
             '*' => self.add_token(tokens::TokenType::STAR),
-            _ => todo!()
+            '!' => {
+                if self._match('=') {
+                    self.add_token(tokens::TokenType::BANG_EQUAL);
+                } else {
+                    self.add_token(tokens::TokenType::BANG);
+                }
+            },
+            '>' => {
+                if self._match('=') {
+                    self.add_token(tokens::TokenType::GREATER_EQUAL);
+                } else {
+                    self.add_token(tokens::TokenType::GREATER);
+                }
+            },
+            '<' => {
+                if self._match('=') {
+                    self.add_token(tokens::TokenType::LESS_EQUAL);
+                } else {
+                    self.add_token(tokens::TokenType::LESS);
+                }
+            },
+            '=' => {
+                if self._match('=') {
+                    self.add_token(tokens::TokenType::EQUAL_EQUAL);
+                } else {
+                    self.add_token(tokens::TokenType::EQUAL);
+                }
+            },
+            '/' => {
+                if self._match('/') {
+                    loop {
+                        if self.peek() == '\n' || self.peek() == '\0' {
+                            break;
+                        }
+                        self.advance();
+                    }
+                } else {
+                    self.add_token(tokens::TokenType::SLASH)
+                }
+            },
+
+            // whitespaces and other ignore cases
+            ' ' | '\t' | '\r' => {}
+
+            '\n' => {
+                self.line += 1;
+            },
+            _ => {
+                panic!("Illegal character: {:?}", c);
+            }
         }
     }
 
