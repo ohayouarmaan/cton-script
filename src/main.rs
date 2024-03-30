@@ -3,6 +3,7 @@ use std::env;
 mod runner;
 mod lexer;
 mod general_types;
+mod ast;
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() > 2 {

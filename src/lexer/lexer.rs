@@ -27,13 +27,16 @@ impl Lexer {
     }
 
     fn advance(&mut self) -> char {
-        let ch: char = self
-            .source
-            .chars()
-            .nth(self.current)
-            .expect("something went wrong while advancing the lexer.");
-        self.current += 1;
-        return ch;
+        if !self.is_at_end() {
+            let ch: char = self
+                .source
+                .chars()
+                .nth(self.current)
+                .expect("something went wrong while advancing the lexer.");
+            self.current += 1;
+            return ch;
+        }
+        return '\0'
     }
 
     fn add_token(&mut self, _type: tokens::TokenType) {
@@ -44,12 +47,21 @@ impl Lexer {
         ));
     }
 
+    pub fn create_token(&mut self, _type: tokens::TokenType) -> tokens::Token{
+        return tokens::Token::new(
+            _type,
+            (&(self.source)[self.start..self.current]).to_owned(),
+            self.line,
+        );
+    }
+
     fn _match(&mut self, expected: char) -> bool {
         if self.is_at_end() {
             return false;
         }
-        let c: char = self.advance();
+        let c: char = self.peek();
         if c == expected {
+            self.advance();
             return true;
         }
         return false;
@@ -80,12 +92,9 @@ impl Lexer {
             ';' => self.add_token(tokens::TokenType::SEMICOLON),
             '*' => self.add_token(tokens::TokenType::STAR),
             '!' => {
-                println!("found!");
                 if self._match('=') {
-                    println!("running if");
                     self.add_token(tokens::TokenType::BANG_EQUAL);
                 } else {
-                    println!("running else");
                     self.add_token(tokens::TokenType::BANG);
                 }
             },
@@ -124,16 +133,70 @@ impl Lexer {
             },
 
             // whitespaces and other ignore cases
-            ' ' | '\t' | '\r' => {}
+            ' ' | '\t' | '\r' => {},
 
             '\n' => {
                 self.line += 1;
             },
-            _ => {
-                panic!("Illegal character: {:?}", c);
+            c => {
+                if c.is_alphabetic() {
+                    // Keyword
+                    self.build_keyword(c);
+
+                } else if c.is_numeric() {
+                    self.build_numbers(c);
+                } else {
+                    panic!("Illegal character: {:?}", c);
+                }
             }
         }
     }
+
+    fn build_numbers(&mut self, mut c: char){
+        let mut lit = c.to_string();
+        let mut dot_count = 0;
+        while (c.is_numeric() || c == '.') && self.peek() != '\0' {
+            println!("C: {c}");
+            if c == '.' {
+                dot_count += 1;
+            }
+            lit += &c.to_string();
+            c = self.advance();
+        }
+
+        if dot_count > 1 {
+            panic!("Invalid number.");
+        } else {
+            self.add_token(tokens::TokenType::NUMBER);
+        }
+    }
+
+    fn build_keyword(&mut self, first_character: char) {
+        let mut keyword = String::new();
+        let mut c=first_character;
+        loop {
+            match c {
+                ' ' | '\n' | '\t' | '\0' => break,
+                _ => {
+                    println!("C: {c}");
+                    keyword += &c.to_string();
+                    match self.peek() {
+                        ' ' | '\n' | '\t' | '\0' => break,
+                        _ => {
+                            c = self.advance();
+                        }
+                    }
+                }
+            }
+        }
+        println!("Sending keyword: {:?}", keyword);
+        let kw = tokens::string_to_token(&keyword);
+        match kw {
+            Ok(keyword) => self.add_token(keyword),
+            Err(e) => panic!("{e}")
+        }
+    }
+
 
     pub fn lex(&mut self) {
         loop {
