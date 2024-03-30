@@ -45,6 +45,9 @@ impl Lexer {
     }
 
     fn _match(&mut self, expected: char) -> bool {
+        if self.is_at_end() {
+            return false;
+        }
         let c: char = self.advance();
         if c == expected {
             return true;
@@ -77,9 +80,12 @@ impl Lexer {
             ';' => self.add_token(tokens::TokenType::SEMICOLON),
             '*' => self.add_token(tokens::TokenType::STAR),
             '!' => {
+                println!("found!");
                 if self._match('=') {
+                    println!("running if");
                     self.add_token(tokens::TokenType::BANG_EQUAL);
                 } else {
+                    println!("running else");
                     self.add_token(tokens::TokenType::BANG);
                 }
             },
@@ -131,6 +137,7 @@ impl Lexer {
 
     pub fn lex(&mut self) {
         loop {
+            println!("c: {:?}", self.current);
             if self.is_at_end() {
                 break;
             }
