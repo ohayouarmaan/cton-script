@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use std::{any::Any, collections::HashMap};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TokenType {
     // Single-character tokens.
     LEFT_PAREN,
@@ -77,11 +77,11 @@ pub fn string_to_token(to_convert: &str) -> Result<TokenType, &str> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
-    _type: TokenType,
-    lexme: String,
-    line: u32
+    pub _type: TokenType,
+    pub lexme: String,
+    pub line: u32
 }
 
 impl Token {

@@ -169,13 +169,16 @@ impl Lexer {
     }
 
     fn build_numbers(&mut self, mut c: char) {
-        let mut lit = c.to_string();
+        let mut lit = "".to_string();
         let mut dot_count = 0;
         while (c.is_numeric() || c == '.') && self.peek() != '\0' && self.peek() != '\n' {
             if c == '.' {
                 dot_count += 1;
             }
             lit += &c.to_string();
+            if !self.peek().is_numeric() {
+                break;
+            }
             c = self.advance();
         }
 

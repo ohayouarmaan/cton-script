@@ -1,0 +1,23 @@
+Binary(
+    Binary {
+        left: Binary(
+            Binary {
+                left: Literal(
+                    NUMBER(Token { _type: NUMBER, lexme: "2", line: 1 })
+                ),
+                operator: STAR,
+                right: Literal(NUMBER(Token { _type: NUMBER, lexme: "4", line: 1 }))
+            }
+        ),
+        operator: SLASH,
+        right: Grouping(
+            Binary(
+                Binary {
+                    left: Literal(NUMBER(Token { _type: NUMBER, lexme: "54", line: 1 })),
+                    operator: PLUS,
+                    right: Literal(NUMBER(Token { _type: NUMBER, lexme: "7", line: 1 }))
+                }
+            )
+        )
+    }
+)
