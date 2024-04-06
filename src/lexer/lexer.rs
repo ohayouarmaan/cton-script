@@ -36,7 +36,7 @@ impl Lexer {
             self.current += 1;
             return ch;
         }
-        return '\0'
+        return '\0';
     }
 
     fn add_token(&mut self, _type: tokens::TokenType) {
@@ -47,13 +47,13 @@ impl Lexer {
         ));
     }
 
-    pub fn create_token(&mut self, _type: tokens::TokenType) -> tokens::Token{
-        return tokens::Token::new(
-            _type,
-            (&(self.source)[self.start..self.current]).to_owned(),
-            self.line,
-        );
-    }
+    // pub fn create_token(&mut self, _type: tokens::TokenType) -> tokens::Token{
+    //     return tokens::Token::new(
+    //         _type,
+    //         (&(self.source)[self.start..self.current]).to_owned(),
+    //         self.line,
+    //     );
+    // }
 
     fn _match(&mut self, expected: char) -> bool {
         if self.is_at_end() {
@@ -97,28 +97,28 @@ impl Lexer {
                 } else {
                     self.add_token(tokens::TokenType::BANG);
                 }
-            },
+            }
             '>' => {
                 if self._match('=') {
                     self.add_token(tokens::TokenType::GREATER_EQUAL);
                 } else {
                     self.add_token(tokens::TokenType::GREATER);
                 }
-            },
+            }
             '<' => {
                 if self._match('=') {
                     self.add_token(tokens::TokenType::LESS_EQUAL);
                 } else {
                     self.add_token(tokens::TokenType::LESS);
                 }
-            },
+            }
             '=' => {
                 if self._match('=') {
                     self.add_token(tokens::TokenType::EQUAL_EQUAL);
                 } else {
                     self.add_token(tokens::TokenType::EQUAL);
                 }
-            },
+            }
             '/' => {
                 if self._match('/') {
                     loop {
@@ -130,19 +130,20 @@ impl Lexer {
                 } else {
                     self.add_token(tokens::TokenType::SLASH)
                 }
-            },
+            }
 
             // whitespaces and other ignore cases
-            ' ' | '\t' | '\r' => {},
-
+            ' ' | '\t' | '\r' => {}
+            '"' => {
+                self.build_string()
+            }
             '\n' => {
                 self.line += 1;
-            },
+            }
             c => {
                 if c.is_alphabetic() {
                     // Keyword
                     self.build_keyword(c);
-
                 } else if c.is_numeric() {
                     self.build_numbers(c);
                 } else {
@@ -152,11 +153,25 @@ impl Lexer {
         }
     }
 
-    fn build_numbers(&mut self, mut c: char){
+    fn build_string(&mut self) {
+        let mut to_build_string = "\"".to_string();
+        let mut current_character = self.advance();
+        while current_character != '"' {
+            if current_character == '\\' {
+                to_build_string += "\\";
+                current_character = self.advance();
+            }
+            to_build_string += &current_character.to_string();
+            current_character = self.advance();
+        }
+        to_build_string += "\"";
+        self.add_token(tokens::TokenType::STRING);
+    }
+
+    fn build_numbers(&mut self, mut c: char) {
         let mut lit = c.to_string();
         let mut dot_count = 0;
-        while (c.is_numeric() || c == '.') && self.peek() != '\0' {
-            println!("C: {c}");
+        while (c.is_numeric() || c == '.') && self.peek() != '\0' && self.peek() != '\n' {
             if c == '.' {
                 dot_count += 1;
             }
@@ -173,12 +188,11 @@ impl Lexer {
 
     fn build_keyword(&mut self, first_character: char) {
         let mut keyword = String::new();
-        let mut c=first_character;
+        let mut c = first_character;
         loop {
             match c {
                 ' ' | '\n' | '\t' | '\0' => break,
                 _ => {
-                    println!("C: {c}");
                     keyword += &c.to_string();
                     match self.peek() {
                         ' ' | '\n' | '\t' | '\0' => break,
@@ -189,18 +203,18 @@ impl Lexer {
                 }
             }
         }
-        println!("Sending keyword: {:?}", keyword);
         let kw = tokens::string_to_token(&keyword);
         match kw {
             Ok(keyword) => self.add_token(keyword),
-            Err(e) => panic!("{e}")
+            Err(_) => {
+                // Create identifiers
+                self.add_token(tokens::TokenType::IDENTIFIER);
+            },
         }
     }
 
-
     pub fn lex(&mut self) {
         loop {
-            println!("c: {:?}", self.current);
             if self.is_at_end() {
                 break;
             }
