@@ -3,7 +3,7 @@ A scripting language written for my own stack `cton` Currently the cton stack ha
 
 # Current Plans
 * Add basic lexer [ x ]
-* Add multi character lexer [  ]
+* Add multi character lexer [ x ]
 * Create a parser [  ]
 * Add variables [  ]
 

@@ -1,4 +1,6 @@
-#[derive(Debug)]
+use std::collections::HashMap;
+
+#[derive(Debug, Copy, Clone)]
 pub enum TokenType {
     // Single-character tokens.
     LEFT_PAREN,
@@ -47,6 +49,32 @@ pub enum TokenType {
     WHILE,
 
     EOF,
+}
+
+pub fn string_to_token(to_convert: &str) -> Result<TokenType, &str> {
+    let mut string_to_token_type = HashMap::new();
+    string_to_token_type.insert("and", TokenType::AND);
+    string_to_token_type.insert("clas", TokenType::CLASS);
+    string_to_token_type.insert("else", TokenType::ELSE);
+    string_to_token_type.insert("false", TokenType::FALSE);
+    string_to_token_type.insert("fun", TokenType::FUN);
+    string_to_token_type.insert("for", TokenType::FOR);
+    string_to_token_type.insert("if", TokenType::IF);
+    string_to_token_type.insert("nil", TokenType::NIL);
+    string_to_token_type.insert("or", TokenType::OR);
+    string_to_token_type.insert("print", TokenType::PRINT);
+    string_to_token_type.insert("return", TokenType::RETURN);
+    string_to_token_type.insert("super", TokenType::SUPER);
+    string_to_token_type.insert("this", TokenType::THIS);
+    string_to_token_type.insert("true", TokenType::TRUE);
+    string_to_token_type.insert("var", TokenType::VAR);
+    string_to_token_type.insert("while", TokenType::WHILE);
+    println!("To Convert: {:?}", to_convert);
+    let x = string_to_token_type.get(to_convert);
+    match x {
+        Some(t) => return Ok(*t),
+        _ => return Err("Invalid token")
+    }
 }
 
 #[derive(Debug)]
