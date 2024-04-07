@@ -1,14 +1,13 @@
 use std::fs;
-use crate::{ast::parser, lexer};
+use crate::{ast::{parser, printer::ASTPrinter}, lexer};
 
 pub fn run(content: String) {
     let mut l1 = lexer::lexer::Lexer::new(content);
     l1.lex();
     let mut toks = l1.tokens.clone();
     let mut p1 = parser::Parser::new(toks);
-    println!("{:?}", l1.tokens);
-    let mut e1 = p1.expr();
-    println!("{:?}", e1);
+    let mut printer = ASTPrinter::new();
+    printer.print(p1.expr())
 }
 
 pub fn run_file(file_name: &str) {

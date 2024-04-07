@@ -1,4 +1,4 @@
-use std::{any::Any, collections::HashMap};
+use std::{collections::HashMap};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TokenType {
@@ -69,7 +69,7 @@ pub fn string_to_token(to_convert: &str) -> Result<TokenType, &str> {
     string_to_token_type.insert("true", TokenType::TRUE);
     string_to_token_type.insert("var", TokenType::VAR);
     string_to_token_type.insert("while", TokenType::WHILE);
-    println!("To Convert: {:?}", to_convert);
+
     let x = string_to_token_type.get(to_convert);
     match x {
         Some(t) => return Ok(*t),
@@ -94,6 +94,6 @@ impl Token {
     }
 
     pub fn to_string(&self) -> String {
-        return format!("TokenType: {:?} lexme: {:?} line: {:?}", self._type, self.lexme, self.line)
+        return format!("{:?} {}", self._type, self.lexme)
     }
 }

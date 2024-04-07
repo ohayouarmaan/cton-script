@@ -1,6 +1,3 @@
-// **********************************************
-// WIP
-// **********************************************
 use crate::general_types::tokens::{Token, TokenType};
 use super::ast::{Binary, Expr, Unary};
 use super::ast::Literal;
