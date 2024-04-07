@@ -126,7 +126,7 @@ impl Parser {
         } else if self.match_token(vec![TokenType::NUMBER]) {
             match self.peek() {
                 Some(_) => {
-                    return Expr::Literal(Literal::NUMBER(self.previous()));
+                    return Expr::Literal(Literal::NUMBER(self.previous().lexme.parse::<f32>().unwrap()));
                 },
                 _ => {
                     panic!("expected the expression to have a literal value but can't find it.");
@@ -135,7 +135,7 @@ impl Parser {
         } else if self.match_token(vec![TokenType::STRING]) {
             match self.peek() {
                 Some(_) => {
-                    return Expr::Literal(Literal::STRING(self.previous()));
+                    return Expr::Literal(Literal::STRING(self.previous().lexme));
                 },
                 _ => {
                     panic!("expected the expression to have a literal value but can't find it.");

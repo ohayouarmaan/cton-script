@@ -1,5 +1,5 @@
 use std::fs;
-use crate::{ast::{parser, printer::ASTPrinter}, lexer};
+use crate::{ast::{parser, printer::ASTPrinter}, interpreter::interpreter::Interpreter, lexer};
 
 pub fn run(content: String) {
     let mut l1 = lexer::lexer::Lexer::new(content);
@@ -7,7 +7,8 @@ pub fn run(content: String) {
     let mut toks = l1.tokens.clone();
     let mut p1 = parser::Parser::new(toks);
     let mut printer = ASTPrinter::new();
-    printer.print(p1.expr())
+    let mut i1 = Interpreter::new(vec![p1.expr()]);
+    i1.evaluate();
 }
 
 pub fn run_file(file_name: &str) {

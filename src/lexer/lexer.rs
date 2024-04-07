@@ -154,7 +154,7 @@ impl Lexer {
     }
 
     fn build_string(&mut self) {
-        let mut to_build_string = "\"".to_string();
+        let mut to_build_string = "".to_string();
         let mut current_character = self.advance();
         while current_character != '"' {
             if current_character == '\\' {
@@ -164,7 +164,6 @@ impl Lexer {
             to_build_string += &current_character.to_string();
             current_character = self.advance();
         }
-        to_build_string += "\"";
         self.add_token(tokens::TokenType::STRING);
     }
 

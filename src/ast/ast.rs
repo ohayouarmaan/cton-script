@@ -39,8 +39,8 @@ impl Expr {
 
 #[derive(Debug, Clone)]
 pub enum Literal {
-    NUMBER(Token),
-    STRING(Token),
+    NUMBER(f32),
+    STRING(String),
     TRUE,
     FALSE,
     NIL,
