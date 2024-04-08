@@ -12,6 +12,10 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
+    pub fn reset(&mut self) {
+        self.current = 0;
+    }
+
     pub fn consume(&mut self, _type: TokenType, err_message: &str) -> Option<Token> {
         if self.tokens[self.current]._type == _type {
             return self.advance();

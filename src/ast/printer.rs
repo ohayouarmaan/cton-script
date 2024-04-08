@@ -40,7 +40,7 @@ impl ASTPrinter {
     }
 
     pub fn print(&mut self, expr: Expr) {
-        println!("{:?}", expr.accept(self));
+        println!("{:?}", expr.accept::<String>(self));
     }
 
     pub fn parthesize(&self, operator: TokenType, exprs: Vec<Expr>) -> String {
