@@ -119,8 +119,127 @@ impl VisitorTrait<Literal> for Interpreter {
                 
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
-                        let mut result: Literal;
+                        let result: Literal;
                         if x >= y {
+                            result = Literal::TRUE;
+                        } else {
+                            result = Literal::FALSE;
+                        }
+                        return result;
+                    }
+                    _ => {
+                        panic!("wtf")
+                    }
+                }
+
+            }
+            TokenType::GREATER => {
+                let left_value = expr.left.accept(self);
+                let right_value = expr.right.accept(self);
+                
+                match (left_value, right_value) {
+                    (Literal::NUMBER(x), Literal::NUMBER(y)) => {
+                        let result: Literal;
+                        if x > y {
+                            result = Literal::TRUE;
+                        } else {
+                            result = Literal::FALSE;
+                        }
+                        return result;
+                    }
+                    _ => {
+                        panic!("wtf")
+                    }
+                }
+
+            }
+
+            TokenType::LESS => {
+                let left_value = expr.left.accept(self);
+                let right_value = expr.right.accept(self);
+                
+                match (left_value, right_value) {
+                    (Literal::NUMBER(x), Literal::NUMBER(y)) => {
+                        let result: Literal;
+                        if x < y {
+                            result = Literal::TRUE;
+                        } else {
+                            result = Literal::FALSE;
+                        }
+                        return result;
+                    }
+                    _ => {
+                        panic!("wtf")
+                    }
+                }
+
+            }
+            TokenType::LESS_EQUAL => {
+                let left_value = expr.left.accept(self);
+                let right_value = expr.right.accept(self);
+                
+                match (left_value, right_value) {
+                    (Literal::NUMBER(x), Literal::NUMBER(y)) => {
+                        let result: Literal;
+                        if x <= y {
+                            result = Literal::TRUE;
+                        } else {
+                            result = Literal::FALSE;
+                        }
+                        return result;
+                    }
+                    _ => {
+                        panic!("wtf")
+                    }
+                }
+
+            }
+            TokenType::EQUAL_EQUAL => {
+                let left_value = expr.left.accept(self);
+                let right_value = expr.right.accept(self);
+                
+                match (left_value, right_value) {
+                    (Literal::NUMBER(x), Literal::NUMBER(y)) => {
+                        let result: Literal;
+                        if x == y {
+                            result = Literal::TRUE;
+                        } else {
+                            result = Literal::FALSE;
+                        }
+                        return result;
+                    }
+                    (Literal::STRING(x), Literal::STRING(y)) => {
+                        let result: Literal;
+                        if x == y {
+                            result = Literal::TRUE;
+                        } else {
+                            result = Literal::FALSE;
+                        }
+                        return result;
+                    }
+                    _ => {
+                        panic!("wtf")
+                    }
+                }
+
+            }
+            TokenType::BANG_EQUAL => {
+                let left_value = expr.left.accept(self);
+                let right_value = expr.right.accept(self);
+                
+                match (left_value, right_value) {
+                    (Literal::NUMBER(x), Literal::NUMBER(y)) => {
+                        let result: Literal;
+                        if x != y {
+                            result = Literal::TRUE;
+                        } else {
+                            result = Literal::FALSE;
+                        }
+                        return result;
+                    }
+                    (Literal::STRING(x), Literal::STRING(y)) => {
+                        let result: Literal;
+                        if x != y {
                             result = Literal::TRUE;
                         } else {
                             result = Literal::FALSE;
