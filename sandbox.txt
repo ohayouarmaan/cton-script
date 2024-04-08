@@ -1,0 +1,15 @@
+Binary(
+    Binary {
+        left: Grouping(
+            Binary(
+                Binary {
+                    left: Literal(NUMBER(0.0)),
+                    operator: STAR,
+                    right: Literal(NUMBER(2.3))
+                }
+            )
+        ),
+        operator: GREATER_EQUAL,
+        right: Literal(NUMBER(1.0))
+    }
+)

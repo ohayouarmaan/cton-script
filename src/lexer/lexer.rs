@@ -154,7 +154,7 @@ impl Lexer {
     }
 
     fn build_string(&mut self) {
-        let mut to_build_string = "\"".to_string();
+        let mut to_build_string = "".to_string();
         let mut current_character = self.advance();
         while current_character != '"' {
             if current_character == '\\' {
@@ -164,26 +164,40 @@ impl Lexer {
             to_build_string += &current_character.to_string();
             current_character = self.advance();
         }
-        to_build_string += "\"";
-        self.add_token(tokens::TokenType::STRING);
+        
+        self.tokens.push(tokens::Token::new(
+            tokens::TokenType::STRING,
+            (&(self.source)[(self.start + 1)..(self.current - 1)]).to_owned(),
+            self.line,
+        ));
     }
 
     fn build_numbers(&mut self, mut c: char) {
-        let mut lit = c.to_string();
-        let mut dot_count = 0;
-        while (c.is_numeric() || c == '.') && self.peek() != '\0' && self.peek() != '\n' {
-            if c == '.' {
-                dot_count += 1;
-            }
-            lit += &c.to_string();
+        while c.is_numeric() && self.peek_next().is_numeric() {
             c = self.advance();
         }
 
-        if dot_count > 1 {
-            panic!("Invalid number.");
-        } else {
-            self.add_token(tokens::TokenType::NUMBER);
+        if c == '.' && self.peek().is_numeric() {
+            c = self.advance();
+            while self.peek().is_numeric() {
+                c = self.advance();
+            }
         }
+        self.add_token(tokens::TokenType::NUMBER);
+    }
+
+    fn peek_next(&self) -> char {
+        if self.is_at_end() {
+            return '\0';
+        }
+        if self.current >= (self.source.len() - 1) {
+            return '\0';
+        }
+        return self
+            .source
+            .chars()
+            .nth(self.current + 1)
+            .expect("Something went wrong");
     }
 
     fn build_keyword(&mut self, first_character: char) {
