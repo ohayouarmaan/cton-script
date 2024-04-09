@@ -1,122 +1,152 @@
 //**************
 // WIP
 //*************
-use crate::ast::ast::{Expr, VisitorTrait, Binary, Unary, Literal};
+use crate::ast::ast::{
+    Binary, Expr, Expr_Statement, Literal, Print_Statement, Statement, StatementVisitorTrait,
+    Unary, VisitorTrait,
+};
+use crate::environment::environment::Environment;
 use crate::general_types::tokens::TokenType;
 
 pub struct Interpreter {
-    pub exprs: Vec<Expr>
+    pub exprs: Vec<Expr>,
+    pub environment: Environment,
 }
 
 impl Interpreter {
     pub fn new(exprs: Vec<Expr>) -> Self {
         Self {
-            exprs
+            exprs,
+            environment: Environment::new(None),
         }
     }
 
-    pub fn evaluate(&mut self) {
-        println!("{:?}", self.exprs[0].accept(self));
+    pub fn evaluate(&mut self, expression: Expr) -> Result<Literal, String> {
+        return expression.accept(self);
+    }
+
+    pub fn interpret(&mut self, statements: Vec<Statement>) {
+        for stmt in statements {
+            self.execute(&stmt);
+        }
+    }
+
+    pub fn execute(&mut self, stmt: &Statement) {
+        stmt.accept(self);
+    }
+
+    pub fn execute_block(&mut self, stmts: &Vec<Box<Statement>>, env: Option<Environment>) {
+        let previous_env = self.environment.clone();
+        match env {
+            Some(e) => {
+                self.environment = e;
+                for stmt in stmts {
+                    self.execute(stmt)
+                }
+            }
+            _ => {
+                for stmt in stmts {
+                    self.execute(stmt)
+                }
+            }
+        }
+        self.environment = previous_env;
     }
 }
 
-impl VisitorTrait<Literal> for Interpreter {
-    fn visitBinaryExpression(&self, expr: Binary) -> Literal {
+impl VisitorTrait<Result<Literal, String>> for Interpreter {
+    fn visitBinaryExpression(&mut self, expr: Binary) -> Result<Literal, String> {
         match expr.operator {
             TokenType::PLUS => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
-                        let result = Literal::NUMBER(
-                            x + y
-                        );
-                        if let Literal::NUMBER(res) = result {
-                            if(res == 7.0) {
+                        let result = Ok(Literal::NUMBER(x + y));
+                        if let Ok(Literal::NUMBER(res)) = result {
+                            if (res == 7.0) {
                                 println!("Thala for a reason");
                             }
                         }
                         return result;
                     }
-                    (Literal::STRING(x), Literal::STRING(y)) => {
-                        return Literal::STRING(
-                            x + &y
-                        )
-                    }
+                    (Literal::STRING(x), Literal::STRING(y)) => return Ok(Literal::STRING(x + &y)),
                     _ => {
-                        todo!();
+                        return Err("The lhs and rhs of the '+' operator should either be number, number or string, string".to_owned());
                     }
                 }
-
             }
             TokenType::MINUS => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
-                        let result = Literal::NUMBER(
-                            x - y
-                        );
+                        let result = Literal::NUMBER(x - y);
                         if let Literal::NUMBER(res) = result {
-                            if(res == 7.0) {
+                            if (res == 7.0) {
                                 println!("Thala for a reason");
                             }
                         }
-                        return result;
+                        return Ok(result);
                     }
                     _ => {
-                        panic!("wtf")
+                        return Err(
+                            "The lhs and rhs of the '-' operator should only be number, number"
+                                .to_owned(),
+                        );
                     }
                 }
             }
             TokenType::SLASH => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
-                        let result = Literal::NUMBER(
-                            x / y
-                        );
+                        let result = Literal::NUMBER(x / y);
                         if let Literal::NUMBER(res) = result {
-                            if(res == 7.0) {
+                            if (res == 7.0) {
                                 println!("Thala for a reason");
                             }
                         }
-                        return result;
+                        return Ok(result);
                     }
                     _ => {
-                        panic!("wtf")
+                        return Err(
+                            "The lhs and rhs of the '/' operator should only be number, number"
+                                .to_owned(),
+                        );
                     }
                 }
             }
             TokenType::STAR => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
-                        let result = Literal::NUMBER(
-                            x * y
-                        );
+                        let result = Literal::NUMBER(x * y);
                         if let Literal::NUMBER(res) = result {
-                            if(res == 7.0) {
+                            if (res == 7.0) {
                                 println!("Thala for a reason");
                             }
                         }
-                        return result;
+                        return Ok(result);
                     }
                     _ => {
-                        panic!("wtf")
+                        return Err(
+                            "The lhs and rhs of the '*' operator should only be number, number"
+                                .to_owned(),
+                        );
                     }
                 }
             }
             TokenType::GREATER_EQUAL => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
                         let result: Literal;
@@ -125,18 +155,20 @@ impl VisitorTrait<Literal> for Interpreter {
                         } else {
                             result = Literal::FALSE;
                         }
-                        return result;
+                        return Ok(result);
                     }
                     _ => {
-                        panic!("wtf")
+                        return Err(
+                            "The lhs and rhs of the '>=' operator should only be number, number"
+                                .to_owned(),
+                        );
                     }
                 }
-
             }
             TokenType::GREATER => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
                         let result: Literal;
@@ -145,19 +177,21 @@ impl VisitorTrait<Literal> for Interpreter {
                         } else {
                             result = Literal::FALSE;
                         }
-                        return result;
+                        return Ok(result);
                     }
                     _ => {
-                        panic!("wtf")
+                        return Err(
+                            "The lhs and rhs of the '>' operator should only be number, number"
+                                .to_owned(),
+                        );
                     }
                 }
-
             }
 
             TokenType::LESS => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
                         let result: Literal;
@@ -166,18 +200,20 @@ impl VisitorTrait<Literal> for Interpreter {
                         } else {
                             result = Literal::FALSE;
                         }
-                        return result;
+                        return Ok(result);
                     }
                     _ => {
-                        panic!("wtf")
+                        return Err(
+                            "The lhs and rhs of the '<' operator should only be number, number"
+                                .to_owned(),
+                        );
                     }
                 }
-
             }
             TokenType::LESS_EQUAL => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
                         let result: Literal;
@@ -186,18 +222,20 @@ impl VisitorTrait<Literal> for Interpreter {
                         } else {
                             result = Literal::FALSE;
                         }
-                        return result;
+                        return Ok(result);
                     }
                     _ => {
-                        panic!("wtf")
+                        return Err(
+                            "The lhs and rhs of the '<=' operator should only be number, number"
+                                .to_owned(),
+                        );
                     }
                 }
-
             }
             TokenType::EQUAL_EQUAL => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
                         let result: Literal;
@@ -206,7 +244,7 @@ impl VisitorTrait<Literal> for Interpreter {
                         } else {
                             result = Literal::FALSE;
                         }
-                        return result;
+                        return Ok(result);
                     }
                     (Literal::STRING(x), Literal::STRING(y)) => {
                         let result: Literal;
@@ -215,18 +253,17 @@ impl VisitorTrait<Literal> for Interpreter {
                         } else {
                             result = Literal::FALSE;
                         }
-                        return result;
+                        return Ok(result);
                     }
                     _ => {
-                        panic!("wtf")
+                        return Err("The lhs and rhs of the '==' operator should either be number, number or string, string".to_owned());
                     }
                 }
-
             }
             TokenType::BANG_EQUAL => {
-                let left_value = expr.left.accept(self);
-                let right_value = expr.right.accept(self);
-                
+                let left_value = expr.left.accept(self).unwrap();
+                let right_value = expr.right.accept(self).unwrap();
+
                 match (left_value, right_value) {
                     (Literal::NUMBER(x), Literal::NUMBER(y)) => {
                         let result: Literal;
@@ -235,7 +272,7 @@ impl VisitorTrait<Literal> for Interpreter {
                         } else {
                             result = Literal::FALSE;
                         }
-                        return result;
+                        return Ok(result);
                     }
                     (Literal::STRING(x), Literal::STRING(y)) => {
                         let result: Literal;
@@ -244,57 +281,111 @@ impl VisitorTrait<Literal> for Interpreter {
                         } else {
                             result = Literal::FALSE;
                         }
-                        return result;
+                        return Ok(result);
                     }
                     _ => {
-                        panic!("wtf")
+                        return Err("The lhs and rhs of the '!=' operator should either be number, number or string, string".to_owned());
                     }
                 }
-
             }
-            _ => panic!("wtf")
+            _ => {
+                return Err("Invalid Binary Operator".to_owned());
+            }
         }
     }
 
-    fn visitUnaryExpression(&self, expr: Unary) -> Literal {
-        let rhs = expr.value.accept(self);
+    fn visitUnaryExpression(&mut self, expr: Unary) -> Result<Literal, String> {
+        let rhs = expr.value.accept(self).unwrap();
         match expr.operator {
             TokenType::BANG => {
                 if let Literal::NUMBER(x) = rhs {
                     if x > 0.0 {
-                        return Literal::TRUE;
+                        return Ok(Literal::TRUE);
                     }
-                    return Literal::FALSE;
+                    return Ok(Literal::FALSE);
                 } else if let Literal::STRING(x) = rhs {
                     if x.len() > 0 {
-                        return Literal::TRUE
+                        return Ok(Literal::TRUE);
                     }
-                    return Literal::FALSE
+                    return Ok(Literal::FALSE);
                 } else if let Literal::FALSE = rhs {
-                    return Literal::TRUE
+                    return Ok(Literal::TRUE);
                 } else if let Literal::TRUE = rhs {
-                    return Literal::FALSE
+                    return Ok(Literal::FALSE);
                 } else {
-                    panic!("Invalid unary value");
+                    return Err(
+                        "The '!' unary operator can only support either bool or number in it's rhs"
+                            .to_owned(),
+                    );
                 }
             }
             TokenType::MINUS => {
                 if let Literal::NUMBER(x) = rhs {
                     if x > 0.0 {
-                        return Literal::NUMBER(-x);
+                        return Ok(Literal::NUMBER(-x));
                     }
-                    return Literal::FALSE;
+                    return Ok(Literal::FALSE);
                 } else if let Literal::STRING(x) = rhs {
-                    return Literal::STRING(x.chars().rev().collect::<String>());
+                    return Ok(Literal::STRING(x.chars().rev().collect::<String>()));
                 } else {
-                    panic!("wow");
+                    return Err("The '-' unary operator can only support either string or number in it's rhs".to_owned());
                 }
             }
-            _ => todo!()
+            _ => {
+                return Err("Invalid Binary Operator".to_owned());
+            }
         }
     }
 
-    fn visitLiteral(&self, expr: Literal) -> Literal {
-        return expr;
+    fn visitLiteral(&mut self, expr: Literal) -> Result<Literal, String> {
+        return Ok(expr);
+    }
+
+    fn visitAssignment(&mut self, expr: crate::ast::ast::Assignment) -> Result<Literal, String> {
+        let value = expr.value.accept(self).unwrap();
+        self.environment.assign(expr.name.lexme, value.clone());
+        return Ok(value);
+    }
+
+    fn visitVariable(&mut self, expr: crate::ast::ast::Variable) -> Result<Literal, String> {
+        self.environment.get_value(expr.name.lexme)
+    }
+}
+
+impl StatementVisitorTrait<()> for Interpreter {
+    fn VisitExprStatement(&mut self, expr: Expr_Statement) -> () {
+        let mut value = self.evaluate(expr.exp);
+    }
+
+    fn VisitPrintStatement(&mut self, expr: Print_Statement) -> () {
+        let mut value = self.evaluate(expr.exp);
+        match value {
+            Ok(expr_value) => {
+                println!("{}", expr_value.to_string());
+            }
+            Err(err) => {
+                println!("{}", err);
+            }
+        }
+    }
+
+    fn VisitVarDecStatement(&mut self, expr: crate::ast::ast::Var_Declaration_Statement) {
+        match expr.value {
+            Some(val) => {
+                if let Ok(evaluated_result) = self.evaluate(val) {
+                    self.environment.assign(expr.id.lexme, evaluated_result);
+                }
+            }
+            _ => {
+                self.environment.assign(expr.id.lexme, Literal::NIL);
+            }
+        }
+    }
+
+    fn VisitBlockStatement(&mut self, expr: &crate::ast::ast::Block_Statement) {
+        self.execute_block(
+            &expr.statements,
+            Some(Environment::new(Some(Box::from(self.environment.clone())))),
+        )
     }
 }

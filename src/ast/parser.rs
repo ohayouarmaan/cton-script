@@ -1,5 +1,6 @@
+use crate::ast::ast::Variable;
 use crate::general_types::tokens::{Token, TokenType};
-use super::ast::{Binary, Expr, Unary};
+use super::ast::{Assignment, Binary, Block_Statement, Expr, Expr_Statement, Print_Statement, Statement, Unary, Var_Declaration_Statement};
 use super::ast::Literal;
 
 pub struct Parser {
@@ -27,27 +28,81 @@ impl Parser {
         return self.tokens[self.current - 1].clone();
     }
 
+    pub fn parse(&mut self) -> Vec<Statement> {
+        let mut stmts: Vec<Statement> = vec![];
+        while !self.is_at_end() {
+            stmts.push(self.declaration());
+        }
+        return stmts;
+    }
+
+    pub fn declaration(&mut self) -> Statement {
+        if self.match_token(vec![TokenType::VAR]) {
+            return self.var_declaration();
+        }
+        return self.statement();
+    }
+
+    pub fn var_declaration(&mut self) -> Statement {
+        let name = self.consume(TokenType::IDENTIFIER, "Expected an identifier").unwrap();
+        let initializer: Option<Expr>;
+        if self.match_token(vec![TokenType::EQUAL]) {
+            initializer = Some(self.expr());
+        } else {
+            initializer = None;
+        }
+        self.consume(TokenType::SEMICOLON, &format!("Expected ';' after a statement line: {}", self.peek().line));
+        return Statement::Var_Declaration_Statement(Var_Declaration_Statement{
+            id: name,
+            value: initializer
+        });
+    }
+
+    pub fn statement(&mut self) -> Statement {
+        if self.match_token(vec![TokenType::PRINT]) {
+            return self.print_statement();
+        }
+        if self.match_token(vec![TokenType::LEFT_BRACE]) {
+            return self.block_statement();
+        }
+        return self.expr_statement();
+    }
+
+    pub fn expr_statement(&mut self) -> Statement {
+        let mut value: Expr = self.expr();
+        self.consume(TokenType::SEMICOLON, &format!("Expected ';' after a statement line: {}", self.peek().line));
+        return Statement::Expr_Statement(Expr_Statement{exp: value})
+    }
+
+    pub fn block_statement(&mut self) -> Statement {
+        let mut stmts = vec![];
+        while self.peek()._type != TokenType::RIGHT_BRACE && !self.is_at_end() {
+            stmts.push(Box::from(self.declaration()));
+        }
+        self.consume(TokenType::RIGHT_BRACE, "Expected a '{' after a block statement");
+        return Statement::Block_Statement(Block_Statement{ statements: stmts });
+    }
+
+    pub fn print_statement(&mut self) -> Statement {
+        let mut value: Expr = self.expr();
+        self.consume(TokenType::SEMICOLON, &format!("Expected ';' after a statement line: {}", self.peek().line));
+        return Statement::Print_Statement(Print_Statement{exp: value})
+    }
+
     fn match_token(&mut self, tokens: Vec<TokenType>) -> bool {
-            match self.peek() {
-                Some(value) => {
-                    for n in tokens{
-                        if n == value._type {
-                            self.advance();
-                            return true;
-                        }
-                    }
-                }
-                None => {
-                    return false;
-                }
+        for n in tokens{
+            if n == self.peek()._type {
+                self.advance();
+                return true;
             }
+        }
         return false;
     }
 
     fn advance(&mut self) -> Option<Token> {
         if !self.is_at_end() {
-            self.current += 1;
             let next_token = self.tokens.get(self.current);
+            self.current += 1;
             match next_token {
                 Some(value) => return Some(value.clone()),
                 None => return None,
@@ -57,40 +112,51 @@ impl Parser {
     }
 
     fn is_at_end(&self) -> bool {
-        if self.current >= self.tokens.len() {
-            return true;
+        match self.peek()._type {
+            TokenType::EOF => {
+                return true;
+            }
+            _ => {
+                return false;
+            }
         }
-        return false;
     }
 
-    fn peek(&self) -> Option<Token> {
-        if !self.is_at_end() {
-            return Some(self.tokens[self.current].clone());
-        }
-        return None;
+    fn peek(&self) -> Token {
+        return self.tokens[self.current].clone();
     }
 
     fn create_binary_expr(&mut self, match_tokens: Vec<TokenType>, precedent_function: fn(&mut Self) -> Expr) -> Expr {
         let mut expr = precedent_function(self);
         while self.match_token(match_tokens.clone()) {
-            match self.peek() {
-                Some(_) => {
-                    let operator_type = self.previous()._type;
-                    let right_expression = precedent_function(self);
-                    expr = Expr::Binary(Binary {
-                        left: Box::new(expr),
-                        operator: operator_type,
-                        right: Box::new(right_expression)
-                    })
-                }
-                _ => {}
-            }
+        let operator_type = self.previous()._type;
+        let right_expression = precedent_function(self);
+        expr = Expr::Binary(Binary {
+            left: Box::new(expr),
+            operator: operator_type,
+            right: Box::new(right_expression)
+        })
         }
         return expr;
     }
 
     pub fn expr(&mut self) -> Expr {
-        return self.equality();
+        return self.assignment();
+    }
+
+    pub fn assignment(&mut self) -> Expr {
+        let exp = self.equality();
+        if self.match_token(vec![TokenType::EQUAL]) {
+            let value = self.assignment();
+            if let Expr::Variable(x) = exp.clone() {
+                let name = x.name;
+                return Expr::Assignment(Assignment{
+                    name,
+                    value: Box::from(value)
+                })
+            }
+        }
+        return exp;
     }
 
     fn equality(&mut self) -> Expr {
@@ -128,29 +194,19 @@ impl Parser {
         } else if self.match_token(vec![TokenType::NIL]) {
             return Expr::Literal(Literal::NIL)
         } else if self.match_token(vec![TokenType::NUMBER]) {
-            match self.peek() {
-                Some(_) => {
-                    return Expr::Literal(Literal::NUMBER(self.previous().lexme.parse::<f32>().unwrap()));
-                },
-                _ => {
-                    panic!("expected the expression to have a literal value but can't find it.");
-                }
-            }
+            return Expr::Literal(Literal::NUMBER(self.previous().lexme.parse::<f32>().unwrap()));
         } else if self.match_token(vec![TokenType::STRING]) {
-            match self.peek() {
-                Some(_) => {
-                    return Expr::Literal(Literal::STRING(self.previous().lexme));
-                },
-                _ => {
-                    panic!("expected the expression to have a literal value but can't find it.");
-                }
-            }
+            return Expr::Literal(Literal::STRING(self.previous().lexme));
         } else if self.match_token(vec![TokenType::LEFT_PAREN]) {
             let expr = self.expr();
             self.consume(TokenType::RIGHT_PAREN, "Expected a ')'");
             return Expr::Grouping(Box::from(expr));
+        } else if self.match_token(vec![TokenType::IDENTIFIER]){
+            return Expr::Variable(Variable{
+                name: self.previous()
+            })
         } else {
-            panic!("invalid token.");
+            panic!("invalid token: '{}'", self.peek().to_string());
         }
     }
 }

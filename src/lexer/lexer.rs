@@ -170,17 +170,16 @@ impl Lexer {
     }
 
     fn build_numbers(&mut self, mut c: char) {
-        while c.is_numeric() && self.peek_next().is_numeric() {
+        while (c.is_numeric() && self.peek() != '\n') || c == '.' {
             c = self.advance();
         }
 
-        if c == '.' && self.peek().is_numeric() {
-            c = self.advance();
-            while self.peek().is_numeric() {
-                c = self.advance();
-            }
-        }
-        self.add_token(tokens::TokenType::NUMBER);
+        self.tokens.push(tokens::Token::new(
+            tokens::TokenType::NUMBER,
+            (&(self.source)[(self.start)..(self.current - 1)]).to_owned(),
+            self.line,
+        ));
+        self.current -= 1;
     }
 
     fn peek_next(&self) -> char {
@@ -202,11 +201,11 @@ impl Lexer {
         let mut c = first_character;
         loop {
             match c {
-                ' ' | '\n' | '\t' | '\0' => break,
+                ' ' | '\n' | '\t' | '\0' | ';' => break,
                 _ => {
                     keyword += &c.to_string();
                     match self.peek() {
-                        ' ' | '\n' | '\t' | '\0' => break,
+                        ' ' | '\n' | '\t' | '\0' | ';' => break,
                         _ => {
                             c = self.advance();
                         }
