@@ -1,1 +1,12 @@
-(0 * 2.3) >= 1
+var first_name = "Armaan";
+var last_name = " Gupta";
+
+if first_name == last_name {
+    print "your first name is equal to last name";
+} elif first_name == "Aditya vikram singh" {
+    print "hi adi";
+} elif first_name + last_name == "Armaan Gupta" {
+    print "hi armaan!";
+} else {
+    print "hi stranger";
+}

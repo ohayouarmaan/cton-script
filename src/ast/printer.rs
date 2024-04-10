@@ -5,15 +5,15 @@ use super::ast::{Binary, Expr, Literal, Unary, VisitorTrait};
 pub struct ASTPrinter {}
 
 impl VisitorTrait<String> for ASTPrinter {
-    fn visitBinaryExpression(&self, expr: Binary) -> String {
+    fn visitBinaryExpression(&mut self, expr: Binary) -> String {
         return self.parthesize(expr.operator, vec![*expr.left, *expr.right]);
     }
 
-    fn visitUnaryExpression(&self, expr: Unary) -> String {
+    fn visitUnaryExpression(&mut self, expr: Unary) -> String {
         return self.parthesize(expr.operator, vec![*expr.value]);
     }
 
-    fn visitLiteral(&self, expr: Literal) -> String {
+    fn visitLiteral(&mut self, expr: Literal) -> String {
         match expr {
             Literal::NUMBER(num) => {
                 return num.to_string();
@@ -32,6 +32,14 @@ impl VisitorTrait<String> for ASTPrinter {
             }
         }
     }
+    
+    fn visitAssignment(&mut self, expr: super::ast::Assignment) -> String {
+        todo!()
+    }
+    
+    fn visitVariable(&mut self, expr: super::ast::Variable) -> String {
+        todo!()
+    }
 }
 
 impl ASTPrinter {
@@ -40,10 +48,10 @@ impl ASTPrinter {
     }
 
     pub fn print(&mut self, expr: Expr) {
-        println!("{:?}", expr.accept::<String>(self));
+        println!("'{}'", expr.accept::<String>(self));
     }
 
-    pub fn parthesize(&self, operator: TokenType, exprs: Vec<Expr>) -> String {
+    pub fn parthesize(&mut self, operator: TokenType, exprs: Vec<Expr>) -> String {
         let mut formatted_string = String::from("( ");
         formatted_string += &format!(" {:?} ", operator);
         for expr in exprs {
