@@ -134,9 +134,7 @@ impl Lexer {
 
             // whitespaces and other ignore cases
             ' ' | '\t' | '\r' => {}
-            '"' => {
-                self.build_string()
-            }
+            '"' => self.build_string(),
             '\n' => {
                 self.line += 1;
             }
@@ -161,7 +159,7 @@ impl Lexer {
             }
             current_character = self.advance();
         }
-        
+
         self.tokens.push(tokens::Token::new(
             tokens::TokenType::STRING,
             (&(self.source)[(self.start + 1)..(self.current - 1)]).to_owned(),
@@ -201,13 +199,18 @@ impl Lexer {
         let mut c = first_character;
         loop {
             match c {
-                ' ' | '\n' | '\t' | '\0' | ';' => break,
                 _ => {
-                    keyword += &c.to_string();
-                    match self.peek() {
-                        ' ' | '\n' | '\t' | '\0' | ';' => break,
-                        _ => {
-                            c = self.advance();
+                    if !c.is_alphabetic() && c != '_' {
+                        break;
+                    } else {
+                        keyword += &c.to_string();
+                        match self.peek() {
+                            x => {
+                                if !x.is_alphabetic() && x != '_' {
+                                    break;
+                                }
+                                c = self.advance();
+                            }
                         }
                     }
                 }
@@ -219,7 +222,7 @@ impl Lexer {
             Err(_) => {
                 // Create identifiers
                 self.add_token(tokens::TokenType::IDENTIFIER);
-            },
+            }
         }
     }
 

@@ -2,8 +2,8 @@
 // WIP
 //*************
 use crate::ast::ast::{
-    Binary, Expr, Expr_Statement, Literal, Print_Statement, Statement, StatementVisitorTrait,
-    Unary, VisitorTrait,
+    Binary, Expr, Expr_Statement, If_Statement, Literal, Print_Statement, Statement,
+    StatementVisitorTrait, Unary, VisitorTrait,
 };
 use crate::environment::environment::Environment;
 use crate::general_types::tokens::TokenType;
@@ -21,7 +21,7 @@ impl Interpreter {
         }
     }
 
-    pub fn evaluate(&mut self, expression: Expr) -> Result<Literal, String> {
+    pub fn evaluate(&mut self, expression: &Expr) -> Result<Literal, String> {
         return expression.accept(self);
     }
 
@@ -354,11 +354,11 @@ impl VisitorTrait<Result<Literal, String>> for Interpreter {
 
 impl StatementVisitorTrait<()> for Interpreter {
     fn VisitExprStatement(&mut self, expr: Expr_Statement) -> () {
-        let mut value = self.evaluate(expr.exp);
+        let mut value = self.evaluate(&expr.exp);
     }
 
     fn VisitPrintStatement(&mut self, expr: Print_Statement) -> () {
-        let mut value = self.evaluate(expr.exp);
+        let mut value = self.evaluate(&expr.exp);
         match value {
             Ok(expr_value) => {
                 println!("{}", expr_value.to_string());
@@ -372,7 +372,7 @@ impl StatementVisitorTrait<()> for Interpreter {
     fn VisitVarDecStatement(&mut self, expr: crate::ast::ast::Var_Declaration_Statement) {
         match expr.value {
             Some(val) => {
-                if let Ok(evaluated_result) = self.evaluate(val) {
+                if let Ok(evaluated_result) = self.evaluate(&val) {
                     self.environment.assign(expr.id.lexme, evaluated_result);
                 }
             }
@@ -387,5 +387,27 @@ impl StatementVisitorTrait<()> for Interpreter {
             &expr.statements,
             Some(Environment::new(Some(Box::from(self.environment.clone())))),
         )
+    }
+
+    fn VisitIfStatement(&mut self, expr: &If_Statement) {
+        let condition = self.evaluate(&expr.condition);
+        let mut has_executed = false;
+        if let Ok(Literal::TRUE) = condition {
+            expr.if_block.accept(self);
+            has_executed = true;
+        } else {
+            for elif in &expr.elif_stmts {
+                let elif_condition = elif.condition.accept(self);
+                if let Ok(Literal::TRUE) = elif_condition {
+                    elif.block.accept(self);
+                    has_executed = true;
+                }
+            }
+        }
+        if !has_executed {
+            if let Some(else_block) = &expr.else_block {
+                else_block.accept(self);
+            }
+        }
     }
 }

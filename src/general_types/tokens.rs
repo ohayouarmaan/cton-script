@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::{collections::HashMap, fmt, path::Display};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TokenType {
@@ -34,6 +34,7 @@ pub enum TokenType {
     AND,
     CLASS,
     ELSE,
+    ELIF,
     FALSE,
     FUN,
     FOR,
@@ -56,6 +57,7 @@ pub fn string_to_token(to_convert: &str) -> Result<TokenType, &str> {
     string_to_token_type.insert("and", TokenType::AND);
     string_to_token_type.insert("clas", TokenType::CLASS);
     string_to_token_type.insert("else", TokenType::ELSE);
+    string_to_token_type.insert("elif", TokenType::ELIF);
     string_to_token_type.insert("false", TokenType::FALSE);
     string_to_token_type.insert("fun", TokenType::FUN);
     string_to_token_type.insert("for", TokenType::FOR);
@@ -95,5 +97,11 @@ impl Token {
 
     pub fn to_string(&self) -> String {
         return format!("{:?} {}", self._type, self.lexme)
+    }
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_string())
     }
 }

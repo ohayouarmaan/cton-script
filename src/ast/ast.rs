@@ -117,7 +117,8 @@ pub enum Statement {
     Expr_Statement(Expr_Statement),
     Print_Statement(Print_Statement),
     Var_Declaration_Statement(Var_Declaration_Statement),
-    Block_Statement(Block_Statement)
+    Block_Statement(Block_Statement),
+    If_Statement(If_Statement)
 }
 
 pub trait StatementVisitorTrait<T> {
@@ -125,6 +126,7 @@ pub trait StatementVisitorTrait<T> {
     fn VisitPrintStatement(&mut self, expr: Print_Statement);
     fn VisitVarDecStatement(&mut self, expr: Var_Declaration_Statement);
     fn VisitBlockStatement(&mut self, expr: &Block_Statement);
+    fn VisitIfStatement(&mut self, expr: &If_Statement);
 }
 
 impl Statement {
@@ -141,6 +143,9 @@ impl Statement {
             }
             Statement::Block_Statement(block) => {
                 visitor.VisitBlockStatement(&block);
+            }
+            Statement::If_Statement(ifstmt) => {
+                visitor.VisitIfStatement(&ifstmt);
             }
         }
     }
@@ -165,4 +170,18 @@ pub struct Var_Declaration_Statement {
 #[derive(Debug, Clone)]
 pub struct Block_Statement {
     pub statements: Vec<Box<Statement>>
+}
+
+#[derive(Debug, Clone)]
+pub struct If_Statement {
+    pub condition: Expr,
+    pub if_block: Box<Statement>,
+    pub elif_stmts: Vec<Box<Elif_Statement>>,
+    pub else_block: Option<Box<Statement>>
+}
+
+#[derive(Debug, Clone)]
+pub struct Elif_Statement {
+    pub condition: Expr,
+    pub block: Box<Statement>
 }

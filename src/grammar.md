@@ -1,7 +1,7 @@
 # Grammar for mark
 
 ```
-expression     → assignment ;
+expression     → equality ;
 assignment     → IDENTIFIER "=" expr 
                | equality ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -20,7 +20,12 @@ declaration    → varDecl
                | statement;
 statement      → exprStmt
                | printStmt
-               | blockStmt ;
+               | blockStmt 
+               | ifStmt ;
+
+ifStmt         → "if" expression blockStmt 
+                ("elif" expression blockStmt)* 
+                ("else" blockStmt)? ;
 
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
